@@ -1,4 +1,5 @@
 <script>
+    import "../styles/not-found.scss";
     function goHome(){
         window.location.href='/';
     }
@@ -14,7 +15,3 @@
         <div class="not-found"></div>
     </div>
 </div>
-
-<style>
-    @import "../styles/not-found.scss";
-</style>

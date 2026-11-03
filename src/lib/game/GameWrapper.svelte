@@ -1,4 +1,5 @@
 <script>
+    import "../../styles/game.scss";
     import PlayerBlock from './PlayerBlock.svelte';
     import Toolbox from "./Toolbox.svelte";
     import GameField from "./GameField.svelte";
@@ -239,8 +240,3 @@
         </div>
     </div>
 </div>
-
-
-<style>
-    @import "../../styles/game.scss";
-</style>

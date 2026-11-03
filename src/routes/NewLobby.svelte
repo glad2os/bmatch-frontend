@@ -1,4 +1,5 @@
 <script>
+    import "../styles/new-lobby.scss";
     import NavigationMenu from "../lib/navigation/NavigationMenu.svelte";
     import guestSvg from "./../assets/guest.svg";
     import {getProfile} from "../lib/utils/getProfile.js";
@@ -174,7 +175,3 @@
 <div class="ready" on:click={redirectGame} style="display: {readyVisible ? 'flex' : 'none'};">
     READY
 </div>
-<style>
-
-    @import "../styles/new-lobby.scss";
-</style>

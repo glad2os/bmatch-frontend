@@ -1,4 +1,5 @@
 <script>
+    import "../styles/home.scss";
     import bg from "../assets/bg.png";
     import { getCookie } from '../lib/utils/cookies.js';
     import {getProfile} from "../lib/utils/getProfile.js";
@@ -27,7 +28,3 @@
     <div class="start-game" on:click={checkCookieAndRedirect}>start game
     </div>
 </main>
-
-<style>
-    @import "../styles/home.scss";
-</style>

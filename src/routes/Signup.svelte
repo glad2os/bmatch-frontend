@@ -1,4 +1,5 @@
 <script>
+    import "../styles/auth.scss";
     import {apiSignUp, getProfile} from "../lib/utils/getProfile.js";
     import {setCookie} from "../lib/utils/cookies.js";
     import {navigate} from "svelte-routing";
@@ -52,7 +53,3 @@
 
     </div>
 </div>
-
-<style>
-    @import "../styles/auth.scss";
-</style>

@@ -1,4 +1,5 @@
 <script>
+    import "../styles/page.scss";
     import NavigationMenu from "../lib/navigation/NavigationMenu.svelte";
 </script>
 
@@ -87,7 +88,3 @@
     </div>
 
 </div>
-
-<style>
-    @import "../styles/page.scss";
-</style>

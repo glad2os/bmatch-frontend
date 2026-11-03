@@ -1,7 +1,4 @@
 <script>
+    import "../styles/profile-card.scss";
 
 </script>
-
-<style>
-    @import "../styles/profile-card.scss";
-</style>

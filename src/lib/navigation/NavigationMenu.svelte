@@ -1,4 +1,5 @@
 <script>
+    import "../../styles/logo.scss";
     import NavItem from "./NavItem.svelte";
     import {getCookie} from "../utils/cookies.js";
     import {getProfile} from "../utils/getProfile.js";
@@ -64,7 +65,3 @@
         {/if}
     </div>
 </div>
-
-<style>
-    @import "../../styles/logo.scss";
-</style>

@@ -1,4 +1,5 @@
 <script>
+    import "../styles/auth.scss";
 
     import {setCookie} from "../lib/utils/cookies.js";
     import {apiLogin, getProfile} from "../lib/utils/getProfile.js";
@@ -61,7 +62,3 @@
 
     </div>
 </div>
-
-<style>
-    @import "../styles/auth.scss";
-</style>
