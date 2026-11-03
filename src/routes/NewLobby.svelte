@@ -110,6 +110,7 @@
         if (players.length < 4) {
             joinLobby(socket, {
                     type: "Bot",
+                    token: getCookie('token'),
                     lobbyID: lobbyID
                 }
             );
