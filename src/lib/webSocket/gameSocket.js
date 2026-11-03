@@ -21,10 +21,6 @@ export function initializeGameSocket(
 
     let wsUrl = config.wsGameUrl;
 
-    if (wsUrl == undefined) {
-        wsUrl = 'wss://game.bubblematch.io'
-    }
-
     const socket = io.connect(`${wsUrl}/`);
 
     socket.on('playerList', playerList => {
@@ -42,10 +38,6 @@ export function initializeGameSocket(
     socket.on('timeRequested', data => {
         timeRequested(data);
     })
-
-    socket.on('systemMessage', message => {
-        systemMessage(message);
-    });
 
     socket.on('systemMessage', message => {
         systemMessage(message);
@@ -78,18 +70,32 @@ export function initializeGameSocket(
         onGameOver(data);
     })
 
-    setInterval(() => {
-        const start = Date.now();
-
-        socket.emit("ping");
-
-        const onPong = () => {
-            onPing(Date.now() - start);
-            socket.off('pong', onPong); // Удаляем обработчик после того, как он был вызван
-        };
-
-        socket.on('pong', onPong);
-    }, 1000);
+    let pingInterval;
+    let pongTimeout;
+    let onPong;
+    function clearPong() {
+        clearTimeout(pongTimeout);
+        if (onPong) socket.off('pong', onPong);
+        onPong = null;
+    }
+    socket.on('connect', () => {
+        clearInterval(pingInterval);
+        pingInterval = setInterval(() => {
+            clearPong();
+            const start = Date.now();
+            onPong = () => {
+                onPing(Date.now() - start);
+                clearPong();
+            };
+            socket.on('pong', onPong);
+            pongTimeout = setTimeout(clearPong, 1000);
+            socket.emit('ping');
+        }, 1000);
+    });
+    socket.on('disconnect', () => {
+        clearInterval(pingInterval);
+        clearPong();
+    });
 
     return socket;
 }

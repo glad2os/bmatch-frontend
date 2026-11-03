@@ -15,7 +15,9 @@
 
     export let messages = [];
 
-    let currentUser = '';
+    let currentUser = 'GUEST';
+    let destroyed = false;
+    let sendCooldown;
     let chatContainer;
     let countdownInterval;
 
@@ -27,11 +29,10 @@
     }
 
     onMount(async () => {
-        const profile = await getProfile(getCookie("token"));
-        currentUser = profile.username;
-        if (currentUser === undefined) {
-            currentUser = "GUEST";
-        }
+        const token = getCookie('token');
+        const profile = token ? await getProfile(token) : null;
+        if (destroyed) return;
+        currentUser = profile?.username || 'GUEST';
 
         const path = window.location.pathname;
         const segments = path.split('/');
@@ -39,10 +40,12 @@
 
         document.addEventListener('mousedown', handleMouseClick);
 
-        return () => {
-            document.removeEventListener('mousedown', handleMouseClick);
-            clearInterval(countdownInterval);  // Clear interval on component destruction
-        };
+    });
+    onDestroy(() => {
+        destroyed = true;
+        document.removeEventListener('mousedown', handleMouseClick);
+        clearInterval(countdownInterval);
+        clearTimeout(sendCooldown);
     });
 
     $: if (typeof totalSeconds !== 'undefined') {
@@ -66,7 +69,7 @@
             event.preventDefault();
             messageContent = event.target.value;
 
-            if (!canSend) return;
+            if (!canSend || !socket) return;
 
             if (messageContent.length < 1) {
                 messageContent = "GG, WP";
@@ -83,7 +86,7 @@
 
             canSend = false;
 
-            setTimeout(() => {
+            sendCooldown = setTimeout(() => {
                 canSend = true;
             }, 1000);
         }

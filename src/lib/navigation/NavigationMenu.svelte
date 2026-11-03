@@ -11,19 +11,19 @@
     let mmr = 0;
     let profileImg = guestSvg;
 
-    let lobbylink = "/singin";
+    let lobbylink = "/login";
 
 
     async function loadProfile() {
         const token = getCookie('token');
         if (token !== null) {
             let profile = await getProfile(token);
+            if (!profile) return;
             user = profile.username;
             mmr = profile.mmr;
             signInVisible = false;
-            lobbylink = `/create-lobby/${profile.username}#${generateRange(profile.mmr)}`
-        } else {
-            signInVisible = false;
+            const roomNumber = `${profile.username}#${generateRange(profile.mmr)}`;
+            lobbylink = `/create-lobby/${encodeURIComponent(roomNumber)}`
         }
     }
 

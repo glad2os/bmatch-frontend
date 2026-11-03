@@ -3,7 +3,6 @@ import config from '../utils/config.js';  // Обновите путь, если
 
 export function initializeLobbySocket({
     onPlayerListUpdated,
-    onDisconnected,
     systemMessage,
     onLobbyRemoved,
     userExist,
@@ -13,14 +12,10 @@ export function initializeLobbySocket({
 
     let wsUrl = config.wsLobbyUrl;
 
-    if (wsUrl == undefined) {
-        wsUrl = 'wss://lobby.bubblematch.io'
-    }
-
     const socket = io.connect(`${wsUrl}/`);
 
     socket.on('playerList', playerList => {
-        let currentLobbyPlayers = JSON.parse(playerList.Players);
+        let currentLobbyPlayers = JSON.parse(playerList.Players || '[]');
         onPlayerListUpdated({ currentLobbyPlayers: currentLobbyPlayers });
     });
 

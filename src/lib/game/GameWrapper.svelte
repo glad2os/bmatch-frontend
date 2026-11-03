@@ -17,7 +17,8 @@
     let openBubbles = [];
     let isYourTurn = false;
 
-    let username = '';
+    let profileId = null;
+    let destroyed = false;
 
     let gamePaused = false;
 
@@ -60,13 +61,15 @@
 
         if (getCookie('token')) {
             let profile = await getProfile(getCookie('token'));
-            username = profile.username;
+            profileId = profile?.id ?? null;
         }
 
+        if (destroyed) return;
         socket = initializeGameSocket({
             onPlayerListUpdated: (data) => {
                 players = data.map((player, index) => ({
                     ...player,
+                    userId: player.id,
                     id: index + 1,
                     img: {guestSvg}
                 }));
@@ -82,7 +85,7 @@
                 alert("Disconnected")
             },
             onPing: (latency) => {
-                let currentIndex = players.findIndex(u => u.username === username);
+                let currentIndex = players.findIndex(u => u.userId === profileId);
                 if (currentIndex !== -1) {
                     players[currentIndex].latency = `${latency} ms`;
                 }
@@ -90,22 +93,12 @@
             gameAction: (data) => {
                 openBubbles = [];
 
-                function addToOpenBubbles(bubbleData) {
-                    openBubbles.push({
-                        id: `item${parseInt(bubbleData.bubbleId)}`,
-                        src: `/bubbles/50shashek_${bubbleData.bubbleImg}.png`
-                    });
-                }
-
-                if (Array.isArray(data.requestedBubbles)) {
-                    if(!(data.requestedBubbles[0].bubbleImg !== data.requestedBubbles.bubbleImg)){
-                        data.requestedBubbles.forEach(addToOpenBubbles);
-                    }
-                } else if (typeof data.requestedBubbles === 'object' && data.requestedBubbles !== null) {
-                    addToOpenBubbles(data.requestedBubbles);
-                }
-
                 data.openBubbles.forEach(addToOpenBubbles);
+                const requested = data.requestedBubbles;
+                if (requested && !Array.isArray(requested) && requested.bubbleId != null) {
+                    addToOpenBubbles(requested);
+                }
+                openBubbles = [...openBubbles];
             },
             userAlreadyInGame: (data) => {
                 alert(`You are signed in game ${data}`)
@@ -115,7 +108,8 @@
                 startTimer(data);
             },
             isPaused: (data) => {
-                gamePaused = data.paused
+                gamePaused = data.paused;
+                if (gamePaused) clearInterval(timerInterval);
             },
             openBubble: (data) => {
                 addToOpenBubbles(data)
@@ -133,16 +127,10 @@
                 alert("Game over")
             },
             getCurrentPlayer: (data) => {
-                let currentPlayer = players.filter(value => {
-                    return value.username === data.username
-                })[0];
-
-                for (let i = 0; i < players.length; i++) {
-                    players[i].isActive = false;
-                }
-
-                players[currentPlayer.id - 1].isActive = true;
-                isYourTurn = (username === currentPlayer.username);
+                const currentPlayer = players.find(player => player.userId === data.id && player.type === data.type);
+                if (!currentPlayer) return;
+                players = players.map(player => ({...player, isActive: player === currentPlayer}));
+                isYourTurn = profileId !== null && profileId === currentPlayer.userId && currentPlayer.type !== 'Bot';
             }
         });
 
@@ -219,12 +207,14 @@
     import {onDestroy} from 'svelte';
 
     onDestroy(() => {
+        destroyed = true;
+        clearInterval(timerInterval);
         window.removeEventListener('resize', adjustBackgroundImage);
         const bgImage = document.querySelector('img[src="/bg.png"]');
         if (bgImage) {
             document.body.removeChild(bgImage);
         }
-        socket.disconnect();
+        socket?.disconnect();
         document.removeEventListener('keydown', handleUserPause);
     });
 

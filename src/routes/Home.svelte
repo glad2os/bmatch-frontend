@@ -10,8 +10,9 @@
 
         if (userCookie) {
             let profile = await getProfile(userCookie);
+            if (!profile) { navigate('/login'); return; }
             let roomNumber = `${profile.username}#${generateRange(profile.mmr)}`
-            navigate(`/create-lobby/${roomNumber}`);
+            navigate(`/create-lobby/${encodeURIComponent(roomNumber)}`);
         } else {
             window.location.href = '/login';
         }

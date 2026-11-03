@@ -17,12 +17,13 @@
 
         let data = await apiLogin(email, password);
 
-        if (data.message) {
+        if (data?.message) {
             setCookie('token', data.message)
 
             let profile = await getProfile(data.message);
+            if (!profile) { navigate('/login'); return; }
             let roomNumber = `${profile.username}#${generateRange(profile.mmr)}`
-            navigate(`/create-lobby/${roomNumber}`);
+            navigate(`/create-lobby/${encodeURIComponent(roomNumber)}`);
         }
 
     }

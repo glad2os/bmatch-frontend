@@ -3,11 +3,12 @@
     import guestSvg from "./../assets/guest.svg";
     import {getProfile} from "../lib/utils/getProfile.js";
     import {getCookie} from "../lib/utils/cookies.js";
-    import {onMount} from "svelte";
+    import {onMount, onDestroy} from "svelte";
     import {initializeLobbySocket, joinLobby, generateGame} from '../lib/webSocket/lobbySocket.js';
     import {copyToClipboard} from "./../lib/utils/uiHelpers.js";
 
     let socket;
+    let destroyed = false;
 
     let players = [];
     let playerId = 1;
@@ -25,12 +26,14 @@
     onMount(async () => {
         if (getCookie('token') !== null) {
             let profile = await getProfile(getCookie('token'));
+            if (destroyed) return;
+            if (!profile) { window.location.href = '/login'; return; }
             mmr = profile.mmr;
             username = profile.username;
 
-            const path = window.location.href;
+            const path = window.location.pathname;
             const segments = path.split('/');
-            lobbyID = segments[segments.length - 1];
+            lobbyID = decodeURIComponent(segments[segments.length - 1]);
 
             socket = initializeLobbySocket({
                 onPlayerListUpdated: ({currentLobbyPlayers}) => {
@@ -51,22 +54,13 @@
                             readyVisible = false;
                         } else {
                             addBotVisible = true;
+                            startGameVisible = false;
                             readyVisible = false;
                         }
                     }
                 },
                 systemMessage: (data) => {
                     alert(data.message)
-                },
-                onDisconnected: () => {
-                    const data = {
-                        id: socket.id,
-                        username: username,
-                        lobbyID: lobbyID
-                    };
-
-                    socket.emit('leave', data);
-                    console.log("leave");
                 },
                 onLobbyRemoved: () => {
                     socket.disconnect();
@@ -99,10 +93,13 @@
                 lobbyID: lobbyID
             });
 
-            return () => {
-                socket.disconnect();
-            };
+        } else {
+            window.location.href = '/login';
         }
+    });
+    onDestroy(() => {
+        destroyed = true;
+        socket?.disconnect();
     });
 
 
@@ -127,7 +124,7 @@
     }
 
     function redirectGame() {
-        window.location.href = 'game/' + uuid;
+        window.location.href = '/game/' + uuid;
     }
 
 </script>

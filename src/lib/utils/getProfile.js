@@ -13,7 +13,7 @@ export async function getProfile(token) {
 
     switch (response.status) {
         case 500:
-            alert("Server error" + await response.json().message);
+            alert("Server error" + (await response.json()).message);
             return null;
         case 401:
             if (!window.location.href.includes('/game/'))
