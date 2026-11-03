@@ -1,4 +1,5 @@
 <script>
+    import "../styles/home.scss";
     import bg from "../assets/bg.png";
     import { getCookie } from '../lib/utils/cookies.js';
     import {getProfile} from "../lib/utils/getProfile.js";
@@ -10,8 +11,9 @@
 
         if (userCookie) {
             let profile = await getProfile(userCookie);
+            if (!profile) { navigate('/login'); return; }
             let roomNumber = `${profile.username}#${generateRange(profile.mmr)}`
-            navigate(`/create-lobby/${roomNumber}`);
+            navigate(`/create-lobby/${encodeURIComponent(roomNumber)}`);
         } else {
             window.location.href = '/login';
         }
@@ -26,7 +28,3 @@
     <div class="start-game" on:click={checkCookieAndRedirect}>start game
     </div>
 </main>
-
-<style>
-    @import "../styles/home.scss";
-</style>
