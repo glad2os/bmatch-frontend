@@ -9,6 +9,7 @@
     import Rules from "./routes/Rules.svelte";
     import NewLobby from "./routes/NewLobby.svelte";
     import Profile from "./routes/Profile.svelte";
+    import Me from "./routes/Me.svelte";
     import NotFound from "./routes/NotFound.svelte";
 </script>
 
@@ -21,6 +22,7 @@
     <Route path="/signup" component={Signup}/>
     <Route path="/health" component={Health}/>
     <Route path="/create-lobby/:room" component={NewLobby}/>
+    <Route path="/me" component={Me}/>
     <Route path="/profile/:user_id" component={Profile}/>
     <Route path="/*" let:params>
         <NotFound />

@@ -83,6 +83,75 @@
     color: rgba(250, 250, 250, 1);
   }
 
+  // Clickable nickname and avatar with the profile dropdown.
+  .profile-menu {
+    position: relative;
+
+    .nickname-block {
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      gap: 12px;
+
+      &:hover,
+      &[aria-expanded="true"] {
+        background: rgba(250, 250, 250, 0.08);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #38BDF8;
+      }
+    }
+  }
+
+  .profile-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 50;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    border-radius: 10px;
+    background: #FAFAFA;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  .profile-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #111;
+    font-family: Rubik, serif;
+    font-size: 1rem;
+    text-decoration: none;
+
+    &:hover {
+      background: #EAEAEA;
+    }
+
+    &.disabled {
+      color: #9A9A9A;
+      cursor: default;
+
+      &:hover {
+        background: none;
+      }
+    }
+
+    em {
+      font-style: normal;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
   .logo {
     background-image: url("/logo.png");
     background-size: contain;

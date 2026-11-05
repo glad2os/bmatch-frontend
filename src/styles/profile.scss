@@ -1,0 +1,346 @@
+// Profile settings (/me) and public profile (/profile/:id).
+.wrapper.profile-page {
+  margin: 32px clamp(16px, 5vw, 80px) 60px;
+}
+
+.profile-loading {
+  color: #A8A3AD;
+  font-family: Rubik, serif;
+}
+
+// The card is split into a 15% identity column and an 85% details column.
+.profile-card {
+  display: grid;
+  grid-template-columns: minmax(200px, 15%) 1fr;
+  min-height: calc(100vh - 220px);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--profile-bg);
+  color: #FAFAFA;
+  font-family: Rubik, serif;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+}
+
+.profile-side {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(250, 250, 250, 0.08);
+}
+
+.profile-side-top {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 24px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.08);
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-size: cover;
+  background-color: rgba(250, 250, 250, 0.1);
+  box-shadow: 0 0 0 3px rgba(250, 250, 250, 0.15);
+}
+
+.profile-side-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 12px;
+  text-align: center;
+
+  .profile-username {
+    font-size: 1.4rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-mmr {
+    color: #C9C4CF;
+  }
+}
+
+.pentagon {
+  width: 100%;
+  max-width: 220px;
+  margin: 16px 0 0;
+  text-align: center;
+
+  svg {
+    width: 100%;
+    height: auto;
+  }
+
+  figcaption {
+    color: #A8A3AD;
+    font-size: 0.8rem;
+  }
+}
+
+.pentagon-ring {
+  fill: none;
+  stroke: rgba(250, 250, 250, 0.25);
+  stroke-width: 0.8;
+}
+
+.pentagon-axis {
+  stroke: rgba(250, 250, 250, 0.15);
+  stroke-width: 0.8;
+}
+
+.pentagon-label {
+  fill: #C9C4CF;
+  font-size: 8px;
+}
+
+.pentagon-value {
+  fill: #FAFAFA;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.profile-stats {
+  margin-top: 4px;
+  color: #C9C4CF;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+
+  strong {
+    color: #FAFAFA;
+  }
+
+  .gain {
+    color: #34D399;
+  }
+
+  .loss {
+    color: #FF4C50;
+  }
+}
+
+.profile-stats-note {
+  color: #FBBF24;
+  font-size: 0.8rem;
+}
+
+.pentagon-values {
+  fill: color-mix(in srgb, var(--stat-color) 35%, transparent);
+  stroke: var(--stat-color);
+  stroke-width: 1.5;
+}
+
+.profile-main {
+  padding: 32px clamp(16px, 3vw, 48px);
+  background: rgba(0, 0, 0, 0.15);
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  h2 {
+    margin: 32px 0 12px;
+    font-size: 1.1rem;
+    color: #C9C4CF;
+    font-weight: 500;
+  }
+}
+
+.profile-main-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-button {
+  padding: 10px 20px;
+  border: 1px solid #FAFAFA;
+  border-radius: 8px;
+  background: #FAFAFA;
+  color: #111;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.secondary {
+    background: transparent;
+    color: #FAFAFA;
+    border-color: rgba(250, 250, 250, 0.4);
+  }
+
+  &.small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #38BDF8;
+    outline-offset: 2px;
+  }
+}
+
+.profile-message {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(52, 211, 153, 0.15);
+  overflow-wrap: anywhere;
+
+  &.error {
+    background: rgba(255, 76, 80, 0.2);
+  }
+}
+
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px 32px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  span {
+    color: #A8A3AD;
+    font-size: 0.85rem;
+  }
+
+  strong {
+    font-weight: 500;
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.profile-main input {
+  padding: 10px 12px;
+  border: 1px solid rgba(250, 250, 250, 0.25);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #FAFAFA;
+  font: inherit;
+  color-scheme: dark;
+
+  &:focus {
+    outline: 2px solid #38BDF8;
+    border-color: transparent;
+  }
+}
+
+.profile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    color: #7DD3FC;
+    overflow-wrap: anywhere;
+  }
+
+  &.editing li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+
+    span {
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.profile-add-link {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.profile-empty {
+  margin: 0;
+  color: #A8A3AD;
+}
+
+.profile-backgrounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile-swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 2px solid rgba(250, 250, 250, 0.2);
+  cursor: pointer;
+
+  &.selected {
+    border-color: #FAFAFA;
+    box-shadow: 0 0 0 3px rgba(250, 250, 250, 0.3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #38BDF8;
+    outline-offset: 2px;
+  }
+}
+
+.profile-password {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px 32px;
+  align-items: end;
+
+  .profile-message,
+  .profile-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+.profile-password-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-side {
+    border-right: none;
+    border-bottom: 1px solid rgba(250, 250, 250, 0.08);
+  }
+}
