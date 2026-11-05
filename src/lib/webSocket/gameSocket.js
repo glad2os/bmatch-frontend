@@ -13,6 +13,8 @@ export function initializeGameSocket(
         closeBubbles,
         getCurrentPlayer,
         onGameOver,
+        onLeftGame,
+        onDebugMode,
         onUserExist,
         userAlreadyInGame,
         onReceiveMessage,
@@ -68,6 +70,16 @@ export function initializeGameSocket(
 
     socket.on('gameOver', data => {
         onGameOver(data);
+    })
+
+    // Debug mode ("debug end" in the chat): every turn is played automatically.
+    socket.on('debugMode', () => {
+        onDebugMode();
+    })
+
+    // Confirms that this user left the game (see leaveGame).
+    socket.on('leftGame', () => {
+        onLeftGame();
     })
 
     let pingInterval;

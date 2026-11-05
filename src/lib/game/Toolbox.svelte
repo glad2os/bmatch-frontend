@@ -2,10 +2,13 @@
     import { onMount, onDestroy } from 'svelte';
     import { getProfile } from "../utils/getProfile.js";
     import { getCookie } from "../utils/cookies.js";
+    import { isExitPhrase } from "./exitGame.js";
 
     export let chatVisible;
     export let toggleChat;
     export let socket;
+    // Called instead of sending when the message is "GG, WP": the game asks whether to leave.
+    export let requestExit = null;
 
     let minutes = 0;
     let seconds = 0;
@@ -76,6 +79,12 @@
             }
 
             event.target.value = '';
+
+            if (requestExit && isExitPhrase(messageContent)) {
+                requestExit(messageContent);
+                messageContent = '';
+                return;
+            }
 
             socket.emit('chatMessage', {
                 message: messageContent,

@@ -1,5 +1,12 @@
 .game-container {
-  width: 860px;
+  // Fills .bg, which is at most 860px wide and shrinks on narrower screens.
+  width: 100%;
+  position: relative;
+  // Own stacking context, so the board plate (::before, z-index -1) stays behind the bubbles.
+  isolation: isolate;
+  // Rows are pulled up by 26.5% of a bubble's height each (see GameField), which leaves empty space
+  // under the board: 9 rows * 26.5% * (570 / 591 bubble aspect) / 10 columns ≈ 23% of the width.
+  margin-bottom: -23%;
 
   display: grid;
   grid-template-columns: repeat(10, 1fr);
@@ -9,15 +16,28 @@
 
 }
 
-@media (min-width: 2560px) {
-  .game-container {
-    width: calc(860px * 1.1); /* Увеличиваем ширину в 1.5 раза */
-  }
+// The board plate under the bubbles. Positioned in CSS so it always moves with the board (it used to
+// be an absolutely positioned <img> placed by JS from viewport coordinates, which shifted whenever the
+// page was scrolled). It spans 20px beyond the sides, starts 7px below the first row and ends 36px
+// below the last row. Rows are pulled up by 9 x 26.5% of a bubble's height, so the last row ends at
+// 7.615 of the 10 bubble heights the container is laid out with: bottom = 23.85% - 36px.
+.game-container::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: 7px;
+  bottom: calc(23.85% - 36px);
+  z-index: -1;
+  background: url("/bg.png") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 .bg {
   display: flex;
   flex-direction: column;
+  flex: 0 1 860px;
+  min-width: 0;
 
   &::after {
 
@@ -39,6 +59,37 @@
   margin: 20px 10% 141px;
 
   justify-content: space-between;
+}
+
+@media (min-width: 2560px) {
+  .bg {
+    flex-basis: calc(860px * 1.1);
+  }
+}
+
+// Narrower windows: smaller side margins so the board and the player list fit side by side.
+@media (max-width: 1400px) {
+  .wrapper.game {
+    margin: 20px 24px 60px;
+  }
+}
+
+// Narrow windows: the player list goes under the board.
+@media (max-width: 860px) {
+  .wrapper.game {
+    flex-direction: column;
+  }
+
+  .bg {
+    flex-basis: auto;
+  }
+
+  .wrapper.game .toolbox {
+    flex: none;
+    // The board's background plate extends ~30px below the last row.
+    margin: 56px 0 0;
+    width: 100%;
+  }
 }
 
 
@@ -93,22 +144,28 @@
 
   &:hover {
     cursor: pointer;
-    background-image: url("/stroke.png");
-    background-size: cover;
-    background-repeat: no-repeat;
+  }
+
+  // Outline in the viewer's colour (--hover-color, set on .game-container). drop-shadow follows the
+  // bubble's transparent outline like the old white stroke image did. Opened bubbles keep their
+  // owner's glow on hover: the .opened rules below are more specific.
+  &:hover,
+  &.hovered {
+    filter: drop-shadow(0 0 1.5px var(--hover-color)) drop-shadow(0 0 1.5px var(--hover-color))
+      drop-shadow(0 0 5px var(--hover-color));
   }
 }
 
 
 .toolbox {
-  width: 320px;
   height: 55vh;
 
 
-  margin-left: 88px;
+  margin-left: clamp(24px, 4vw, 88px);
   align-self: flex-start;
   display: flex;
-  flex: 1;
+  flex: 1 1 320px;
+  min-width: 280px;
 
   flex-direction: column;
 
@@ -257,6 +314,7 @@
   .info {
     display: flex;
     flex: 1;
+    min-width: 0;
     align-items: center;
     justify-content: flex-start;
 
@@ -264,7 +322,7 @@
       display: flex;
 
       .img {
-        margin-left: 31px;
+        margin-left: clamp(8px, 2vw, 31px);
         min-width: 47px;
         min-height: 47px;
         background-size: cover;
@@ -277,9 +335,13 @@
 
     .right {
       margin-left: 10px;
+      min-width: 0;
 
       .nickname {
         font-size: 1.3rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
@@ -288,7 +350,38 @@
       flex:1;
       justify-content: flex-end;
       .latency{
-        margin-right: 35px;
+        margin-right: clamp(8px, 2vw, 35px);
+        white-space: nowrap;
+      }
+
+      // Bot's chance to find a pair: a number and a bar in the bot's colour.
+      .chance {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        margin-right: clamp(8px, 2vw, 35px);
+      }
+
+      .chance-value {
+        font-weight: 700;
+        color: var(--player-color);
+        white-space: nowrap;
+      }
+
+      .chance-bar {
+        width: 56px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+
+        span {
+          display: block;
+          height: 100%;
+          background: var(--player-color);
+          transition: width 0.4s ease;
+        }
       }
     }
   }
@@ -298,6 +391,383 @@
   transform: translateY(-15px);
 }
 
+// Opened bubbles glow in the colour of the player who opened them (--owner-color).
+// drop-shadow follows the bubble's transparent outline instead of drawing a box.
+// Opening or closing a bubble flips it (see GameField). !important keeps the flip over the hover
+// animation, which is set inline while the cursor is on the bubble that was just clicked.
+.item.flipping {
+  animation: bubbleFlip 320ms ease-in-out !important;
+}
+
+@keyframes bubbleFlip {
+  0%, 100% {
+    transform: translateY(var(--translateY)) scaleX(1);
+  }
+  50% {
+    transform: translateY(var(--translateY)) scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item.flipping {
+    animation: none !important;
+  }
+}
+
+// Found pairs are strongly muted so the cells still in play stand out; a thin glow keeps the
+// owner's colour readable. Hover brings a pair back to full contrast.
+.item.opened.matched {
+  opacity: 0.35;
+  filter: grayscale(0.7) brightness(0.8) drop-shadow(0 0 2px var(--owner-color));
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+.item.opened.pending {
+  filter: drop-shadow(0 0 4px var(--owner-color)) drop-shadow(0 0 10px var(--owner-color));
+  animation: ownerPulse 1.2s ease-in-out infinite;
+}
+
+// Hovering an opened bubble outlines it and its pair more strongly, in the owner's colour.
+.item.opened:hover,
+.item.opened.hovered {
+  opacity: 1;
+  filter: drop-shadow(0 0 2px var(--owner-color)) drop-shadow(0 0 2px var(--owner-color))
+    drop-shadow(0 0 12px var(--owner-color));
+}
+
+@keyframes ownerPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px var(--owner-color)) drop-shadow(0 0 10px var(--owner-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px var(--owner-color)) drop-shadow(0 0 22px var(--owner-color));
+  }
+}
+
+// Each seat has its own colour (--player-color); the player whose turn it is gets a filled block.
+.player-block {
+  border-left: 8px solid var(--player-color);
+  transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+
+  .id {
+    color: var(--player-color);
+    font-weight: 700;
+  }
+
+  &.left {
+    opacity: 0.45;
+  }
+
+  .left-label {
+    margin-right: clamp(8px, 2vw, 35px);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  &.active {
+    border-color: var(--player-color);
+    background-color: color-mix(in srgb, var(--player-color) 22%, transparent);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--player-color) 55%, transparent);
+  }
+}
+
 .highlighted-icon {
   filter: brightness(1.25);
+}
+
+// Exit confirmation (ConfirmDialog).
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.confirm-dialog {
+  min-width: min(360px, calc(100vw - 32px));
+  padding: 24px;
+  border-radius: 10px;
+  background: #FAFAFA;
+  color: #111;
+  font-family: 'Rubik', serif;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+
+  p {
+    margin: 0 0 20px;
+    font-size: 1.3rem;
+    font-weight: 500;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .confirm-cancel {
+    background: #E5E5E5;
+    color: #111;
+  }
+
+  .confirm-ok {
+    background: #FF4C50;
+    color: white;
+  }
+
+  button:focus-visible {
+    outline: 3px solid #38BDF8;
+    outline-offset: 2px;
+  }
+}
+
+// Shown above the board in debug mode.
+.debug-badge {
+  align-self: flex-start;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #FBBF24;
+  color: #111;
+  font-family: Rubik, serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// Results screen at the end of a game.
+.results-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  animation: results-fade 0.25s ease-out;
+}
+
+.results-dialog {
+  width: min(480px, 100%);
+  padding: 28px 24px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgb(25, 25, 25);
+  color: #FAFAFA;
+  font-family: 'Rubik', serif;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  animation: results-rise 0.3s ease-out;
+
+  &.won {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(251, 191, 36, 0.12);
+  }
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.65);
+  }
+}
+
+.results-crown {
+  width: 40px;
+  height: 40px;
+  fill: #FBBF24;
+}
+
+.results-tag {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #FBBF24;
+  color: #111;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.results-list {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: grid;
+    grid-template-columns: 22px 10px minmax(0, 1fr) 90px auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+
+    &.you {
+      border-color: var(--player-color);
+      background: color-mix(in srgb, var(--player-color) 12%, transparent);
+    }
+  }
+
+  .winner .results-place {
+    color: #FBBF24;
+  }
+}
+
+.results-place {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+.results-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--player-color);
+}
+
+.results-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  em {
+    margin-left: 6px;
+    font-style: normal;
+    font-size: 0.75rem;
+    color: var(--player-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &.muted {
+      color: rgba(255, 255, 255, 0.45);
+    }
+  }
+}
+
+.results-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--player-color);
+  }
+}
+
+.results-pairs {
+  min-width: 64px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+.results-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  button, a {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .results-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FAFAFA;
+  }
+
+  .results-primary {
+    background: #FF4C50;
+    color: white;
+  }
+
+  button:focus-visible, a:focus-visible {
+    outline: 3px solid #38BDF8;
+    outline-offset: 2px;
+  }
+}
+
+// Reopens the results after "View board".
+.results-reopen {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 90;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #FF4C50;
+  color: white;
+  font: 700 1rem 'Rubik', serif;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 480px) {
+  .results-list li {
+    grid-template-columns: 22px 10px minmax(0, 1fr) auto;
+  }
+  .results-bar {
+    display: none;
+  }
+}
+
+@keyframes results-fade {
+  from { opacity: 0; }
+}
+
+@keyframes results-rise {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-overlay, .results-dialog {
+    animation: none;
+  }
 }

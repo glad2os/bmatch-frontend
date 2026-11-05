@@ -23,6 +23,8 @@
     let mmr = 2000;
     let username = "Guest";
     let uuid = '';
+    // Set when the server reports that this user is still in a running game.
+    let activeGameUUID = null;
 
     onMount(async () => {
         if (getCookie('token') !== null) {
@@ -82,6 +84,11 @@
                     readyVisible = true;
                 },
 
+                activeGame: (gameUUID) => {
+                    activeGameUUID = gameUUID;
+                    addBotVisible = false;
+                    startGameVisible = false;
+                },
                 gameUUID: (data) => {
                     uuid = data;
                     window.location.href=`/game/${data}`;
@@ -158,6 +165,13 @@
     </div>
 
     <div class="lobby-toolbox" style="display: {isLobbyRemoved ? 'none' : 'flex'}">
+        {#if activeGameUUID}
+            <p class="active-game">You are still in a running game.</p>
+            <a class="button return-to-game" href="/game/{activeGameUUID}">
+                <p>Return to game</p>
+            </a>
+        {/if}
+
         <div class="button" on:click={copyToClipboard}>
             <p>Copy link</p>
         </div>

@@ -7,7 +7,8 @@ export function initializeLobbySocket({
     onLobbyRemoved,
     userExist,
     gameRedirect,
-    gameUUID
+    gameUUID,
+    activeGame
 }) {
 
     let wsUrl = config.wsLobbyUrl;
@@ -37,6 +38,11 @@ export function initializeLobbySocket({
 
     socket.on('gameUUID', data => {
         gameUUID(data.uuid);
+    });
+
+    // Sent instead of joining when the user is still in a running game.
+    socket.on('activeGame', data => {
+        activeGame(data.uuid);
     });
 
     return socket;

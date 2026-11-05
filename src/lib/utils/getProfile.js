@@ -72,3 +72,40 @@ export async function apiSignUp(email, password, username) {
             return null;
     }
 }
+
+async function sendJson(path, method, token, body) {
+    const response = await fetch(`${apiUrl}${path}`, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? {'Authorization': `Bearer ${token}`} : {})
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    let data = null;
+    try {
+        data = await response.json();
+    } catch {
+        // Empty body (e.g. 401 or 404).
+    }
+    return {ok: response.ok, status: response.status, data};
+}
+
+// Saves the signed-in user's profile; returns {ok, status, data} with the updated profile or an error message.
+export function apiUpdateProfile(token, profile) {
+    return sendJson('/api/user/profile', 'PUT', token, profile);
+}
+
+export function apiChangePassword(token, currentPassword, newPassword) {
+    return sendJson('/api/user/password', 'PUT', token, {currentPassword, newPassword});
+}
+
+// Public profile, readable without signing in (shared links).
+export function apiPublicProfile(userId) {
+    return sendJson(`/api/user/public/${encodeURIComponent(userId)}`, 'GET');
+}
+
+// Averages of the analysed games of a player (bmatch-analytics), public like the profile.
+export function apiPlayerStats(userId) {
+    return sendJson(`/api/user/public/${encodeURIComponent(userId)}/stats`, 'GET');
+}
